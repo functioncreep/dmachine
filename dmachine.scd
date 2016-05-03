@@ -4,6 +4,8 @@ MIDIFunc.trace;
 (
 // Drums --------------------------------
 
+~clhatdecay = 0.2;
+
 SynthDef(\kick, {arg
 	freq = 40,
 	punch = 0.05,
@@ -18,7 +20,7 @@ SynthDef(\kick, {arg
 }).add;
 
 SynthDef(\clhat, {arg
-	decay = 1,
+	decay = ~clhatdecay,
 	amp = 0.5;
 
 	var env = EnvGen.kr(Env.perc(0.001, decay, curve: -20), doneAction: 2);
@@ -58,10 +60,15 @@ SynthDef(\reso, {arg
 // MIDI note assignment --------------------------------
 
 (
-MIDIdef.noteOn(\kick, {arg val, note; k = Synth(\kick); k.set(\amp, val.linexp(0,127,0.01,0.9))}, 60);
-MIDIdef.noteOn(\clhat, {arg val, note; l = Synth(\clhat); l.set(\amp, val.linexp(0,127,0.01,0.9))}, 61);
-MIDIdef.noteOn(\ohat, {arg val, note; m = Synth(\ohat); m.set(\amp, val.linexp(0,127,0.01,0.9), \gate, 1)}, 62);
-MIDIdef.noteOff(\hatoff, {m.set(\gate, 0)}, 62);
-MIDIdef.noteOn(\reso, {arg val, note; r = Synth(\reso); r.set(\amp, val.linexp(0,127,0.01,0.9))}, 63);
-MIDIdef.noteOff(\resoff, {r.set(\gate, 0)}, 63);
+MIDIdef.noteOn(\kick, {arg val, note; k = Synth(\kick); k.set(\amp, val.linlin(0,127,0.01,0.9))}, 36);
+MIDIdef.noteOn(\clhat, {arg val, note; ~clhat = Synth(\clhat); ~clhat.set(\amp, val.linlin(0,127,0.01,0.9), \decay, ~clhatdecay)}, 38);
+MIDIdef.noteOn(\ohat, {arg val, note; m = Synth(\ohat); m.set(\amp, val.linlin(0,127,0.01,0.9), \gate, 1)}, 39);
+MIDIdef.noteOff(\hatoff, {m.set(\gate, 0)}, 39);
+MIDIdef.noteOn(\reso, {arg val, note; r = Synth(\reso); r.set(\amp, val.linlin(0,127,0.01,0.8))}, 37);
+MIDIdef.noteOff(\resoff, {r.set(\gate, 0)}, 37);
+MIDIdef.cc(\clhatdecay, {arg val, cc; [cc, val].postln; ~clhatdecay = val.linlin(0,127,0.05,2.0)})
 )
+
+	MIDIFunc.trace(false);
+
+	MIDIdef.cc(\clhatdecay, {arg val, cc; [cc, val].postln})
